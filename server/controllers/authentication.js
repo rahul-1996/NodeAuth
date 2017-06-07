@@ -10,48 +10,63 @@ function tokenForUser(user) {
     }, config.secret);
 }
 
+
+exports.signin = function (req, res, next) {
+    res.send({
+        token: tokenForUser(req.user)
+    });
+}
+
 exports.signup = function (req, res, next) {
-    const fname = req.body.fName;
-    const lname = req.body.lName;
+    // console.log(req.body);
+
     const email = req.body.email;
     const password = req.body.password;
+    const fname = req.body.fname ; 
+    const lname = req.body.lname ; 
 
-    if (!email || !password ) {
+    // Ensure that the mandatory data is present
+
+    if (!email || !password) {
         return res.status(422).send({
-            error: 'You must provide valid data.'
-        });
+            error: "You must supply both an email address and password"
+        })
     }
 
-    //See if user with given email already exists
+    // See if a user with the given email already exists
+
     User.findOne({
         email: email
-    }, function (err, existingUser) {
+    }, (err, foundUser) => {
+        // Pass on error(s)
         if (err) {
             return next(err);
         }
 
-        //If a user with email exists, return an error. 
-        if (existingUser) {
-            return res.status(422).send({
-                error: 'Email is in use'
-            });
+        // Return an error if so
+
+        if (foundUser) {
+            return res.status(409).send({
+                error: "That email address is already in use"
+            }); // Conflicting user
         }
 
-        //Create and save record if email does not exist.
-        const user = new User({
-            fname: fname,
-            lname: lname,
+        // Create and save a new user record
+
+        const newUser = new User({
             email: email,
             password: password
         });
 
-        user.save(function (err) {
-            return next(err);
+        newUser.save(function (err) {
+            if (err) {
+                return next(err);
+            }
 
-            //Respond to request indicating the user was created
-            res.json({  token: tokenForUser(user)});
+            res.send({
+                token: tokenForUser(newUser)
+            });
         });
-
     });
+};
 
-}
