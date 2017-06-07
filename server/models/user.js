@@ -14,19 +14,10 @@ const userSchema = new Schema({
     password: String
 });
 
-
-
-// Create the model class
-
-const ModelClass = mongoose.model('user', userSchema) ;
-
-//onSavehook encrypt password
-
 userSchema.pre('save', function (next) {
-    var user = this;
-    var SALT_FACTOR = 5;
+    const user = this;
 
-    bcrypt.genSalt(SALT_FACTOR, function (err, salt) {
+    bcrypt.genSalt(10, function (err, salt) {
         if (err) return next(err);
 
         bcrypt.hash(user.password, salt, null, function (err, hash) {
@@ -37,6 +28,16 @@ userSchema.pre('save', function (next) {
     });
 });
 
+
+
+
+// Create the model class
+
+const ModelClass = mongoose.model('user', userSchema);
+
+//onSavehook encrypt password
+
+
 // Export the model ss
 
-module.exports = ModelClass ; 
+module.exports = ModelClass;
